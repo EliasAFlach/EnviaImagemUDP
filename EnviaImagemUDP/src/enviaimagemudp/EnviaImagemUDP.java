@@ -23,6 +23,7 @@ import javax.imageio.ImageIO;
  * @author elias
  */
 public class EnviaImagemUDP extends javax.swing.JFrame {
+
     private static int BUFFER_SIZE = 65507;
     private boolean capturar = false;
     private boolean receber = false;
@@ -86,35 +87,7 @@ public class EnviaImagemUDP extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCapturarActionPerformed
 
     private void btnEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEnviarActionPerformed
-        try {
-            int port = 7788;
-            DatagramSocket datagramSocket = new DatagramSocket();
-            
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(image, "JPG", baos);
-            baos.flush();
 
-            DatagramPacket packet;
-            byte[] buffer;
-            
-            int sizePacket = (baos.toByteArray().length / BUFFER_SIZE);
-            int rest = (baos.toByteArray().length % BUFFER_SIZE);
-            
-            //buffer = new byte[sizePacket];
-            //send(buffer, port, datagramSocket);
-            
-            for (int i = 0; i < baos.toByteArray().length; i+=BUFFER_SIZE) {
-                buffer = Arrays.copyOfRange(baos.toByteArray(), i, i + BUFFER_SIZE-1); 
-                send(buffer, port, datagramSocket);
-            }
-            
-            buffer = Arrays.copyOfRange(baos.toByteArray(), baos.toByteArray().length - rest, baos.toByteArray().length);
-            send(buffer, port, datagramSocket);
-
-
-        } catch (IOException ex) {
-            Logger.getLogger(EnviaImagemUDP.class.getName()).log(Level.SEVERE, null, ex);
-        }
 
     }//GEN-LAST:event_btnEnviarActionPerformed
 
@@ -125,6 +98,42 @@ public class EnviaImagemUDP extends javax.swing.JFrame {
         datagramSocket.send(packet);
     }
 
+    private void enviar() {
+
+        try {
+            int port = 7788;
+            DatagramSocket datagramSocket = new DatagramSocket();
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "JPG", baos);
+            baos.flush();
+
+            DatagramPacket packet;
+            byte[] buffer;
+
+            int sizePacket = (baos.toByteArray().length / BUFFER_SIZE);
+            int rest = (baos.toByteArray().length % BUFFER_SIZE);
+
+            
+            int count = 0;
+            for (int i = 0; i < baos.toByteArray().length; i += BUFFER_SIZE) {
+                buffer = Arrays.copyOfRange(baos.toByteArray(), i, i + BUFFER_SIZE);
+                send(buffer, port, datagramSocket);
+                count++;
+            }
+
+            System.out.println("Pacote --->" + count);
+
+            
+            buffer = Arrays.copyOfRange(baos.toByteArray(), baos.toByteArray().length - rest, baos.toByteArray().length);
+            send(buffer, port, datagramSocket);
+
+        } catch (IOException ex) {
+            Logger.getLogger(EnviaImagemUDP.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     @Override
     public void paint(Graphics g) {
         if (capturar) {
@@ -133,7 +142,7 @@ public class EnviaImagemUDP extends javax.swing.JFrame {
                 Robot r = new Robot();
 
                 Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-                
+
                 int telaX = (int) screen.getWidth();
                 int telaY = (int) screen.getHeight();
                 image = r.createScreenCapture(new Rectangle(telaX, telaY));
@@ -144,39 +153,19 @@ public class EnviaImagemUDP extends javax.swing.JFrame {
                         g.drawRect(100 + x * scale, 100 + y * scale, scale, scale);
                     }
                 }
+                
+                
+                enviar();
+                
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
-
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(EnviaImagemUDP.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(EnviaImagemUDP.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(EnviaImagemUDP.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(EnviaImagemUDP.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-        //</editor-fold>
 
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 EnviaImagemUDP enviaImagemUDP = new EnviaImagemUDP();
