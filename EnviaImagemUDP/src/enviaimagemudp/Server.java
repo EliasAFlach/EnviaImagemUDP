@@ -18,7 +18,6 @@ import javax.swing.JLabel;
 
 public class Server extends Thread {
 
-    private static int BUFFER_SIZE = 65507;
     private DatagramSocket datagramSocket;
     private BufferedImage img;
     Socket server;
@@ -36,14 +35,15 @@ public class Server extends Thread {
     }
 
     public void run() {
-        List<Byte> packets = new ArrayList<Byte>();
+        List<Byte> packets = new ArrayList<>();
         int count = 0;
 
         while (true) {
             try {
                 InputStream input;
-                byte[] data = new byte[BUFFER_SIZE];
-                
+                byte[] data = new byte[Util.BUFFER_SIZE];
+                byte[] data2 = new byte[datagramSocket.getReceiveBufferSize()];
+
                 DatagramPacket packet = new DatagramPacket(data, data.length);
                 datagramSocket.receive(packet);
                 count = count + 1;
@@ -55,22 +55,18 @@ public class Server extends Thread {
                     packets.add(buffer[i]);
                 }
 
-               // if (count == 24) {
-                    byte[] newBuffer = new byte[packets.size()];
+                byte[] newBuffer = new byte[packets.size()];
 
-                    for (int i = 0; i < packets.size(); i++) {
-                        newBuffer[i] = packets.get(i);
-                    }
+                for (int i = 0; i < packets.size(); i++) {
+                    newBuffer[i] = packets.get(i);
+                }
 
-                    input = new ByteArrayInputStream(newBuffer);
-                    img = ImageIO.read(ImageIO.createImageInputStream(input));
-                    label.setIcon(new ImageIcon(img));
-                    frame.pack();
-                  
-                    Thread.sleep(10);
-                    
-                    
-                //}
+                input = new ByteArrayInputStream(newBuffer);
+                img = ImageIO.read(ImageIO.createImageInputStream(input));
+                label.setIcon(new ImageIcon(img));
+                frame.pack();
+
+                Thread.sleep(1000);
 
             } catch (Exception ex) {
                 System.out.println(ex);
@@ -83,7 +79,7 @@ public class Server extends Thread {
     }
 
     public static void main(String[] args) throws IOException, SQLException, ClassNotFoundException, Exception {
-        Thread t = new Server(7788);
+        Thread t = new Server(Util.PORT);
         t.start();
 
     }

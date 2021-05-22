@@ -1,11 +1,9 @@
 package enviaimagemudp;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Robot;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,16 +15,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Arrays;
 import javax.imageio.ImageIO;
+import javax.swing.JFrame;
 
 /**
  *
  * @author elias
  */
-public class EnviaImagemUDP extends javax.swing.JFrame {
+public class EnviaImagemUDP extends JFrame {
 
-    private static int BUFFER_SIZE = 65507;
     private boolean capturar = false;
-    private boolean receber = false;
     private BufferedImage image;
 
     public EnviaImagemUDP() {
@@ -87,51 +84,48 @@ public class EnviaImagemUDP extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCapturarActionPerformed
 
     private void btnEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEnviarActionPerformed
-
-
+        splitImageAndSend();
     }//GEN-LAST:event_btnEnviarActionPerformed
 
-    private void send(byte[] buffer, int port, DatagramSocket datagramSocket) throws IOException, UnknownHostException {
-        DatagramPacket packet;
-        packet = new DatagramPacket(buffer, buffer.length,
-                InetAddress.getLocalHost(), port);
+    private void send(byte[] buffer) throws IOException, UnknownHostException {
+        DatagramSocket datagramSocket = new DatagramSocket();
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length,
+                InetAddress.getLocalHost(), Util.PORT);
         datagramSocket.send(packet);
     }
 
-    private void enviar() {
-
+    private void splitImageAndSend() {
         try {
-            int port = 7788;
-            DatagramSocket datagramSocket = new DatagramSocket();
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(image, "JPG", baos);
-            baos.flush();
+            ByteArrayOutputStream baos = imageToByteArrays();
+            int sizeImage = baos.toByteArray().length;
+            int rest = (sizeImage % Util.BUFFER_SIZE);
+            int sizePackets = (sizeImage - rest);
 
-            DatagramPacket packet;
             byte[] buffer;
-
-            int sizePacket = (baos.toByteArray().length / BUFFER_SIZE);
-            int rest = (baos.toByteArray().length % BUFFER_SIZE);
-
-            
-            int count = 0;
-            for (int i = 0; i < baos.toByteArray().length; i += BUFFER_SIZE) {
-                buffer = Arrays.copyOfRange(baos.toByteArray(), i, i + BUFFER_SIZE);
-                send(buffer, port, datagramSocket);
-                count++;
+            for (int i = 0; i < sizePackets; i += Util.BUFFER_SIZE) {
+                buffer = fillBuffer(baos, i, i + Util.BUFFER_SIZE);
+                send(buffer);
             }
 
-            System.out.println("Pacote --->" + count);
-
-            
-            buffer = Arrays.copyOfRange(baos.toByteArray(), baos.toByteArray().length - rest, baos.toByteArray().length);
-            send(buffer, port, datagramSocket);
+            buffer = fillBuffer(baos, sizePackets, sizeImage);
+            send(buffer);
 
         } catch (IOException ex) {
             Logger.getLogger(EnviaImagemUDP.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+    }
+
+    private byte[] fillBuffer(ByteArrayOutputStream baos, int sizePackets, int sizeImage) {
+        return Arrays.copyOfRange(baos.toByteArray(), sizePackets, sizeImage);
+    }
+
+    private ByteArrayOutputStream imageToByteArrays() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(image, "JPG", baos);
+        baos.flush();
+        return baos;
     }
 
     @Override
@@ -140,11 +134,8 @@ public class EnviaImagemUDP extends javax.swing.JFrame {
             try {
                 int scale = 1;
                 Robot r = new Robot();
-
-                Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-
-                int telaX = (int) screen.getWidth();
-                int telaY = (int) screen.getHeight();
+                int telaX = (int) Util.SCREEN.getWidth();
+                int telaY = (int) Util.SCREEN.getHeight();
                 image = r.createScreenCapture(new Rectangle(telaX, telaY));
 
                 for (int y = 0; y < telaY; y++) {
@@ -153,10 +144,6 @@ public class EnviaImagemUDP extends javax.swing.JFrame {
                         g.drawRect(100 + x * scale, 100 + y * scale, scale, scale);
                     }
                 }
-                
-                
-                enviar();
-                
 
             } catch (Exception e) {
                 e.printStackTrace();
