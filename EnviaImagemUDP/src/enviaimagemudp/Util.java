@@ -10,5 +10,7 @@ import java.awt.Toolkit;
 public class Util {
     public static int BUFFER_SIZE = 7072;
     public static final int PORT = 7788;
+    public static final int HEADER_START = 1;
+    public static final int HEADER_STOP = 0;
     public static Dimension SCREEN = Toolkit.getDefaultToolkit().getScreenSize();
 }

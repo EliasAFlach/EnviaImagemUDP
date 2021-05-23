@@ -102,13 +102,19 @@ public class EnviaImagemUDP extends JFrame {
             int rest = (sizeImage % Util.BUFFER_SIZE);
             int sizePackets = (sizeImage - rest);
 
-            byte[] buffer;
+            byte[] buffer = new byte[Util.HEADER_START];
+            send(buffer);
+            
+            
             for (int i = 0; i < sizePackets; i += Util.BUFFER_SIZE) {
                 buffer = fillBuffer(baos, i, i + Util.BUFFER_SIZE);
                 send(buffer);
             }
 
             buffer = fillBuffer(baos, sizePackets, sizeImage);
+            send(buffer);
+            
+            buffer = new byte[Util.HEADER_STOP];
             send(buffer);
 
         } catch (IOException ex) {

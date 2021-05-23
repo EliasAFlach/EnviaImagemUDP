@@ -42,40 +42,49 @@ public class Server extends Thread {
             try {
                 InputStream input;
                 byte[] data = new byte[Util.BUFFER_SIZE];
-                byte[] data2 = new byte[datagramSocket.getReceiveBufferSize()];
 
                 DatagramPacket packet = new DatagramPacket(data, data.length);
                 datagramSocket.receive(packet);
                 count = count + 1;
                 byte[] buffer = packet.getData();
 
-                System.out.println("Pacote n° " + count + " de tamanho " + buffer.length);
+                System.out.println("Pacote n° " + count + " de tamanho " + packet.getLength());
+                
+                
+                if (packet.getLength() == Util.HEADER_START) {
+                    System.out.println("Inicio transmissão");
+                } else {
 
-                for (int i = 0; i < buffer.length; i++) {
-                    packets.add(buffer[i]);
+                    for (int i = 0; i < buffer.length; i++) {
+                        packets.add(buffer[i]);
+                    }
+
+                    byte[] newBuffer = new byte[packets.size()];
+
+                    for (int i = 0; i < packets.size(); i++) {
+                        newBuffer[i] = packets.get(i);
+                    }
+
+                    input = new ByteArrayInputStream(newBuffer);
+                    img = ImageIO.read(ImageIO.createImageInputStream(input));
+                    label.setIcon(new ImageIcon(img));
+                    frame.pack();
+                    
+                    
+                    if (packet.getLength() == Util.HEADER_STOP) {
+                        System.out.println("fim transmissao");
+                        packets.clear();
+                    }
+
                 }
 
-                byte[] newBuffer = new byte[packets.size()];
 
-                for (int i = 0; i < packets.size(); i++) {
-                    newBuffer[i] = packets.get(i);
-                }
-
-                input = new ByteArrayInputStream(newBuffer);
-                img = ImageIO.read(ImageIO.createImageInputStream(input));
-                label.setIcon(new ImageIcon(img));
-                frame.pack();
-
-                Thread.sleep(1000);
+                //Thread.sleep(1000);
 
             } catch (Exception ex) {
                 System.out.println(ex);
             }
         }
-    }
-
-    public void receiveFile() {
-
     }
 
     public static void main(String[] args) throws IOException, SQLException, ClassNotFoundException, Exception {
