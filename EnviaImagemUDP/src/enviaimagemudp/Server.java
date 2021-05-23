@@ -1,5 +1,7 @@
 package enviaimagemudp;
 
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -12,11 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 
-public class Server extends Thread {
+public class Server extends JPanel implements Runnable {
 
     private DatagramSocket datagramSocket;
     private BufferedImage img;
@@ -26,14 +28,15 @@ public class Server extends Thread {
 
     public Server(int port) throws IOException, SQLException, ClassNotFoundException, Exception {
         datagramSocket = new DatagramSocket(port);
-        frame.add(label);
+        /*frame.add(label);
         frame.setSize(500, 500);
         frame.setLocationRelativeTo(frame);
         frame.setDefaultCloseOperation(3);
         frame.setTitle("Servidor");
-        frame.setVisible(true);
+        frame.setVisible(true);}*/
     }
 
+    @Override
     public void run() {
         List<Byte> packets = new ArrayList<>();
         int count = 0;
@@ -49,8 +52,7 @@ public class Server extends Thread {
                 byte[] buffer = packet.getData();
 
                 System.out.println("Pacote n° " + count + " de tamanho " + packet.getLength());
-                
-                
+
                 if (packet.getLength() == Util.HEADER_START) {
                     System.out.println("Inicio transmissão");
                 } else {
@@ -67,28 +69,40 @@ public class Server extends Thread {
 
                     input = new ByteArrayInputStream(newBuffer);
                     img = ImageIO.read(ImageIO.createImageInputStream(input));
-                    label.setIcon(new ImageIcon(img));
+                    //label.setIcon(new ImageIcon(img));
                     frame.pack();
-                    
-                    
+
                     if (packet.getLength() == Util.HEADER_STOP) {
                         System.out.println("fim transmissao");
                         packets.clear();
                     }
-
+                    repaint();
                 }
 
-
                 //Thread.sleep(1000);
-
             } catch (Exception ex) {
                 System.out.println(ex);
             }
         }
     }
 
+    @Override
+    public void paint(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.drawImage(img, 0, 0, frame);
+    }
+
     public static void main(String[] args) throws IOException, SQLException, ClassNotFoundException, Exception {
-        Thread t = new Server(Util.PORT);
+        Server server = new Server(Util.PORT);
+
+        JFrame frame = new JFrame("Server");
+        frame.add(server);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 500);
+        frame.setLocationRelativeTo(server);
+        frame.setVisible(true);
+
+        Thread t = new Thread(server);
         t.start();
 
     }
