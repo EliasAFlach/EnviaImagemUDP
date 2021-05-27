@@ -1,7 +1,9 @@
 package enviaimagemudp;
 
+import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.image.BufferedImage;
@@ -15,13 +17,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Arrays;
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
 /**
  *
  * @author elias
  */
-public class EnviaImagemUDP extends JFrame {
+public class EnviaImagemUDP extends JFrame implements Runnable {
 
     private boolean capturar = false;
     private BufferedImage image;
@@ -30,12 +33,12 @@ public class EnviaImagemUDP extends JFrame {
         initComponents();
     }
 
-    @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         btnCapturar = new javax.swing.JButton();
         btnEnviar = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -54,16 +57,21 @@ public class EnviaImagemUDP extends JFrame {
             }
         });
 
+        jLabel1.setText("jLabel1");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(btnCapturar)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnEnviar)
-                .addContainerGap(794, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(btnCapturar)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnEnviar))
+                    .addComponent(jLabel1))
+                .addContainerGap(1325, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -72,7 +80,9 @@ public class EnviaImagemUDP extends JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnEnviar)
                     .addComponent(btnCapturar))
-                .addContainerGap(635, Short.MAX_VALUE))
+                .addGap(77, 77, 77)
+                .addComponent(jLabel1)
+                .addContainerGap(657, Short.MAX_VALUE))
         );
 
         pack();
@@ -88,13 +98,15 @@ public class EnviaImagemUDP extends JFrame {
     }//GEN-LAST:event_btnEnviarActionPerformed
 
     private void send(byte[] buffer) throws IOException, UnknownHostException {
-        DatagramSocket datagramSocket = new DatagramSocket();
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length,
-                InetAddress.getLocalHost(), Util.PORT);
-        datagramSocket.send(packet);
+        try ( DatagramSocket datagramSocket = new DatagramSocket()) {
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length,
+                    InetAddress.getLocalHost(), Util.PORT);
+            datagramSocket.send(packet);
+        }
     }
 
     private void splitImageAndSend() {
+
         try {
 
             ByteArrayOutputStream baos = imageToByteArrays();
@@ -104,8 +116,7 @@ public class EnviaImagemUDP extends JFrame {
 
             byte[] buffer = new byte[Util.HEADER_START];
             send(buffer);
-            
-            
+
             for (int i = 0; i < sizePackets; i += Util.BUFFER_SIZE) {
                 buffer = fillBuffer(baos, i, i + Util.BUFFER_SIZE);
                 send(buffer);
@@ -113,7 +124,7 @@ public class EnviaImagemUDP extends JFrame {
 
             buffer = fillBuffer(baos, sizePackets, sizeImage);
             send(buffer);
-            
+
             buffer = new byte[Util.HEADER_STOP];
             send(buffer);
 
@@ -136,7 +147,8 @@ public class EnviaImagemUDP extends JFrame {
 
     @Override
     public void paint(Graphics g) {
-        if (capturar) {
+        Graphics2D g2 = (Graphics2D) g;
+        while (true) {
             try {
                 int scale = 1;
                 Robot r = new Robot();
@@ -144,34 +156,42 @@ public class EnviaImagemUDP extends JFrame {
                 int telaY = (int) Util.SCREEN.getHeight();
                 image = r.createScreenCapture(new Rectangle(telaX, telaY));
 
-                for (int y = 0; y < telaY; y++) {
-                    for (int x = 0; x < telaX; x++) {
-                        g.setColor(new Color(image.getRGB(x, y)));
-                        g.drawRect(100 + x * scale, 100 + y * scale, scale, scale);
+                /*for (int y = 0; y < telaY; y+=120) {
+                    for (int x = 0; x < telaX; x += 120) {
+                        g2.setColor(new Color(image.getRGB(x, y)));
+                        g2.drawRect(0 + x * scale, 0 + y * scale, scale, scale);
                     }
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
+                }*/
+                g2.drawImage(image, 0, 0, this);
+                splitImageAndSend();
+                Thread.sleep(1000);
+            } catch (AWTException e) {
+                System.out.println(e.getMessage());
+            } catch (InterruptedException ex) {
+                Logger.getLogger(EnviaImagemUDP.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
 
     public static void main(String args[]) {
 
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                EnviaImagemUDP enviaImagemUDP = new EnviaImagemUDP();
-                enviaImagemUDP.setTitle("Client");
-                enviaImagemUDP.setDefaultCloseOperation(EXIT_ON_CLOSE);
-                enviaImagemUDP.setLocationRelativeTo(enviaImagemUDP.rootPane);
-                enviaImagemUDP.setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            EnviaImagemUDP enviaImagemUDP = new EnviaImagemUDP();
+            enviaImagemUDP.setTitle("");
+            enviaImagemUDP.setDefaultCloseOperation(EXIT_ON_CLOSE);
+            enviaImagemUDP.setLocationRelativeTo(enviaImagemUDP.rootPane);
+            enviaImagemUDP.setVisible(true);
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCapturar;
     private javax.swing.JButton btnEnviar;
+    private javax.swing.JLabel jLabel1;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void run() {
+        repaint();
+    }
 }
