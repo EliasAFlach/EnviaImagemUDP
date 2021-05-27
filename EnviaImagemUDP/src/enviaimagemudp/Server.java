@@ -55,33 +55,33 @@ public class Server extends JPanel implements Runnable {
 
                 if (packet.getLength() == Util.HEADER_START) {
                     System.out.println("Inicio transmissão");
-                } else {
-
-                    for (int i = 0; i < buffer.length; i++) {
-                        packets.add(buffer[i]);
-                    }
-
-                    byte[] newBuffer = new byte[packets.size()];
-
-                    for (int i = 0; i < packets.size(); i++) {
-                        newBuffer[i] = packets.get(i);
-                    }
-
-                    input = new ByteArrayInputStream(newBuffer);
-                    img = ImageIO.read(ImageIO.createImageInputStream(input));
-                    //label.setIcon(new ImageIcon(img));
-                    frame.pack();
-
-                    if (packet.getLength() == Util.HEADER_STOP) {
-                        System.out.println("fim transmissao");
-                        packets.clear();
-                    }
-                    repaint();
                 }
+
+                for (int i = 0; i < buffer.length; i++) {
+                    packets.add(buffer[i]);
+                }
+
+                byte[] newBuffer = new byte[packets.size()];
+
+                for (int i = 0; i < packets.size(); i++) {
+                    newBuffer[i] = packets.get(i);
+                }
+
+                input = new ByteArrayInputStream(newBuffer);
+                img = ImageIO.read(ImageIO.createImageInputStream(input));
+                frame.pack();
+
+                if (packet.getLength() == Util.HEADER_STOP) {
+                    System.out.println("fim transmissao");
+                    packets.clear();
+                }
+                repaint();
 
                 //Thread.sleep(1000);
             } catch (Exception ex) {
                 System.out.println(ex);
+                packets.clear();
+                repaint();
             }
         }
     }
