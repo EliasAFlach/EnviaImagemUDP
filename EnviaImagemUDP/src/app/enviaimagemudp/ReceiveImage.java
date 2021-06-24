@@ -1,4 +1,4 @@
-package enviaimagemudp;
+package app.enviaimagemudp;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -19,7 +19,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-public class Server extends JPanel implements Runnable {
+public class ReceiveImage extends JPanel implements Runnable {
 
     private DatagramSocket datagramSocket;
     private BufferedImage img;
@@ -27,7 +27,7 @@ public class Server extends JPanel implements Runnable {
     JFrame frame = new JFrame();
     JLabel label = new JLabel();
 
-    public Server(int port) throws IOException, SQLException, ClassNotFoundException, Exception {
+    public ReceiveImage(int port) throws IOException, SQLException, ClassNotFoundException, Exception {
         datagramSocket = new DatagramSocket(port);
     }
 
@@ -72,11 +72,12 @@ public class Server extends JPanel implements Runnable {
                         System.out.println("fim transmissao");
                         packets.clear();
                     }
+
                     repaint();
 
                 }
 
-              //  Thread.sleep(10);
+                //  Thread.sleep(10);
             } catch (Exception ex) {
                 System.out.println(ex);
                 packets.clear();
@@ -91,21 +92,8 @@ public class Server extends JPanel implements Runnable {
         g2.setRenderingHint(
                 RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HBGR);
+
         g2.drawImage(img, 0, 0, frame);
     }
 
-    public static void main(String[] args) throws IOException, SQLException, ClassNotFoundException, Exception {
-        Server server = new Server(Util.PORT);
-
-        JFrame frame = new JFrame("");
-        frame.add(server);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(500, 500);
-        frame.setLocationRelativeTo(server);
-        frame.setVisible(true);
-
-        Thread t = new Thread(server);
-        t.start();
-
-    }
 }

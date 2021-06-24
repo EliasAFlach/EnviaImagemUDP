@@ -1,7 +1,6 @@
-package enviaimagemudp;
+package app.enviaimagemudp;
 
 import java.awt.AWTException;
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -17,20 +16,24 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Arrays;
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
 /**
  *
  * @author elias
  */
-public class EnviaImagemUDP extends JFrame implements Runnable {
+public class SendImage extends JFrame implements Runnable {
 
     private boolean capturar = false;
     private BufferedImage image;
 
-    public EnviaImagemUDP() {
+    public SendImage() {
         initComponents();
+
+        this.setTitle("");
+        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        this.setLocationRelativeTo(null);
+        this.setVisible(true);
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -38,7 +41,6 @@ public class EnviaImagemUDP extends JFrame implements Runnable {
 
         btnCapturar = new javax.swing.JButton();
         btnEnviar = new javax.swing.JButton();
-        jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -57,21 +59,16 @@ public class EnviaImagemUDP extends JFrame implements Runnable {
             }
         });
 
-        jLabel1.setText("jLabel1");
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(btnCapturar)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnEnviar))
-                    .addComponent(jLabel1))
-                .addContainerGap(1325, Short.MAX_VALUE))
+                .addComponent(btnCapturar)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnEnviar)
+                .addContainerGap(1319, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -80,9 +77,7 @@ public class EnviaImagemUDP extends JFrame implements Runnable {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnEnviar)
                     .addComponent(btnCapturar))
-                .addGap(77, 77, 77)
-                .addComponent(jLabel1)
-                .addContainerGap(657, Short.MAX_VALUE))
+                .addContainerGap(751, Short.MAX_VALUE))
         );
 
         pack();
@@ -129,7 +124,7 @@ public class EnviaImagemUDP extends JFrame implements Runnable {
             send(buffer);
 
         } catch (IOException ex) {
-            Logger.getLogger(EnviaImagemUDP.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SendImage.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }
@@ -164,30 +159,18 @@ public class EnviaImagemUDP extends JFrame implements Runnable {
                 }*/
                 g2.drawImage(image, 0, 0, this);
                 splitImageAndSend();
-                Thread.sleep(1000);
+                Thread.sleep(50);
             } catch (AWTException e) {
                 System.out.println(e.getMessage());
             } catch (InterruptedException ex) {
-                Logger.getLogger(EnviaImagemUDP.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(SendImage.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }
-
-    public static void main(String args[]) {
-
-        java.awt.EventQueue.invokeLater(() -> {
-            EnviaImagemUDP enviaImagemUDP = new EnviaImagemUDP();
-            enviaImagemUDP.setTitle("");
-            enviaImagemUDP.setDefaultCloseOperation(EXIT_ON_CLOSE);
-            enviaImagemUDP.setLocationRelativeTo(enviaImagemUDP.rootPane);
-            enviaImagemUDP.setVisible(true);
-        });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCapturar;
     private javax.swing.JButton btnEnviar;
-    private javax.swing.JLabel jLabel1;
     // End of variables declaration//GEN-END:variables
 
     @Override
